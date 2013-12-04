@@ -126,11 +126,11 @@
 		var currentIndex = 0;
 
 		function process(zipWriter, entry, onend, onprogress, totalSize) {
-			var childIndex = 0;
+			var childIndex = 0, stop = false;
 
 			function exportChild() {
 				var child = entry.children[childIndex];
-				if (child)
+				if (child && !stop)
 					zipWriter.add(child.getFullname(), child.reader, function() {
 						currentIndex += child.uncompressedSize || 0;
 						process(zipWriter, child, function() {
@@ -139,7 +139,7 @@
 						}, onprogress, totalSize);
 					}, function(index) {
 						if (onprogress)
-							onprogress(currentIndex + index, totalSize);
+							stop = onprogress(currentIndex + index, totalSize) === false ? true : false ;
 					}, {
 						directory : child.directory,
 						version : child.zipVersion
@@ -209,7 +209,7 @@
 		var currentIndex = 0;
 
 		function process(fileEntry, entry, onend, onprogress, onerror, totalSize) {
-			var childIndex = 0;
+			var childIndex = 0, stop = false;
 
 			function addChild(child) {
 				function nextChild(childFileEntry) {
@@ -230,14 +230,14 @@
 					}, function(file) {
 						child.getData(new zip.FileWriter(file, zip.getMimeType(child.name)), nextChild, function(index) {
 							if (onprogress)
-								onprogress(currentIndex + index, totalSize);
+								stop = onprogress(currentIndex + index, totalSize) === false?true:false;
 						}, checkCrc32);
 					}, onerror);
 			}
 
 			function processChild() {
 				var child = entry.children[childIndex];
-				if (child)
+				if (child && !stop)
 					addChild(child);
 				else
 					onend();
