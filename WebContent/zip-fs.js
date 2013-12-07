@@ -77,11 +77,13 @@
 		var size = 0;
 
 		function process(entry) {
+			console.log(entry);
 			size += entry.uncompressedSize || 0;
 			entry.children.forEach(process);
 		}
 
 		process(entry);
+		console.log(size);
 		return size;
 	}
 
@@ -213,6 +215,7 @@
 
 			function addChild(child) {
 				function nextChild(childFileEntry) {
+					console.log("next",child);
 					currentIndex += child.uncompressedSize || 0;
 					process(childFileEntry, child, function() {
 						childIndex++;
@@ -229,6 +232,8 @@
 						create : true
 					}, function(file) {
 						child.getData(new zip.FileWriter(file, zip.getMimeType(child.name)), nextChild, function(index) {
+					
+							console.trace("index>>>",index);
 							if (onprogress)
 								stop = onprogress(currentIndex + index, totalSize) === false?true:false;
 						}, checkCrc32);
@@ -245,7 +250,7 @@
 
 			processChild();
 		}
-
+		console.log('>>>>>>',entry);
 		if (entry.directory)
 			process(fileEntry, entry, onend, onprogress, onerror, totalSize);
 		else
@@ -262,8 +267,15 @@
 
 		function stepCopy() {
 			var index = chunkIndex * CHUNK_SIZE;
-			if (onprogress)
-				onprogress(index, reader.size);
+			var processed = 0;
+			if (onprogress){
+				if (reader.size - index < 0) {
+						processed += Math.min(CHUNK_SIZE, reader.size);
+				}else{
+						processed += index;
+				}
+				onprogress(processed, reader.size);
+			}
 			if (index < reader.size)
 				reader.readUint8Array(index, Math.min(CHUNK_SIZE, reader.size - index), function(array) {
 					writer.writeUint8Array(new Uint8Array(array), function() {
