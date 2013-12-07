@@ -268,8 +268,7 @@
 		function stepCopy() {
 			var index = chunkIndex * CHUNK_SIZE;
 			if (onprogress){
-					processed = Math.min(index,reader.size);
-					onprogress(processed, reader.size);
+					onprogress(Math.min(index,reader.size), reader.size);
 			}
 			if (index < reader.size){
 				reader.readUint8Array(index, Math.min(CHUNK_SIZE, reader.size - index), function(array) {
