@@ -232,8 +232,12 @@
 						create: true
 					}, function(file) {
 						child.getData(new zip.FileWriter(file, zip.getMimeType(child.name)), nextChild, function(index) {
-							if (onprogress)
-								stop = onprogress(currentIndex + index, totalSize) === false ? true : false;
+							var result;
+							if (onprogress){
+								result = onprogress(currentIndex + index, totalSize);
+							}
+							stop = result === false ? true : false;
+							return result;
 						}, checkCrc32);
 					}, onerror);
 			}
@@ -265,13 +269,14 @@
 		function stepCopy() {
 			var index = chunkIndex * CHUNK_SIZE;
 			var result ;
-			if (stop) {
-				onend();
-				return;
-			}
+
 			if (onprogress){
 					result = onprogress(Math.min(index+CHUNK_SIZE,reader.size), reader.size);
 					stop = result === false ? true : false;
+			}
+			if (stop) {
+				onend();
+				return;
 			}
 			reader.readUint8Array(index, Math.min(CHUNK_SIZE, reader.size - index), function(array) {
 				writer.writeUint8Array(new Uint8Array(array), function() {
@@ -290,6 +295,7 @@
 	}
 
 	function getEntryData(writer, onend, onprogress, onerror) {
+		console.log("getEntryData");
 		var that = this;
 		if (!writer || (writer.constructor == that.Writer && that.data))
 			onend(that.data);
