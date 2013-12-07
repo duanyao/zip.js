@@ -277,7 +277,7 @@
 			if (stop) {
 				onend();
 				return;
-			}
+
 			reader.readUint8Array(index, Math.min(CHUNK_SIZE, reader.size - index), function(array) {
 				writer.writeUint8Array(new Uint8Array(array), function() {
 					chunkIndex++;
