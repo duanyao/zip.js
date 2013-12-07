@@ -267,22 +267,18 @@
 
 		function stepCopy() {
 			var index = chunkIndex * CHUNK_SIZE;
-			var processed = 0;
 			if (onprogress){
-				if (reader.size - index < 0) {
-						processed += Math.min(CHUNK_SIZE, reader.size);
-				}else{
-						processed += index;
-				}
-				onprogress(processed, reader.size);
+					processed = Math.min(index,reader.size);
+					onprogress(processed, reader.size);
 			}
-			if (index < reader.size)
+			if (index < reader.size){
 				reader.readUint8Array(index, Math.min(CHUNK_SIZE, reader.size - index), function(array) {
 					writer.writeUint8Array(new Uint8Array(array), function() {
 						chunkIndex++;
 						stepCopy();
 					});
 				}, onerror);
+			}
 			else
 				writer.getData(onend);
 		}
