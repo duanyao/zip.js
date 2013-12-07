@@ -262,15 +262,19 @@
 
 		function stepCopy() {
 			var index = chunkIndex * CHUNK_SIZE;
-			if (onprogress)
-				onprogress(index, reader.size);
-			if (index < reader.size)
+			if (onprogress){
+					processed = Math.min(index,reader.size);
+					onprogress(processed, reader.size);
+			}
+			if (index < reader.size){
+
 				reader.readUint8Array(index, Math.min(CHUNK_SIZE, reader.size - index), function(array) {
 					writer.writeUint8Array(new Uint8Array(array), function() {
 						chunkIndex++;
 						stepCopy();
 					});
 				}, onerror);
+			}
 			else
 				writer.getData(onend);
 		}
