@@ -260,27 +260,30 @@
 	}
 
 	function bufferedCopy(reader, writer, onend, onprogress, onerror) {
-		var chunkIndex = 0,
-			stop = false;
+		var chunkIndex = 0, stop = false;
 
 		function stepCopy() {
 			var index = chunkIndex * CHUNK_SIZE;
+			var result ;
 			if (stop) {
 				onend();
 				return;
 			}
-			if (onprogress) {
-				stop = onprogress(Math.min(index, reader.size), reader.size) === false ? true : false;
+			if (onprogress){
+					result = onprogress(Math.min(index+CHUNK_SIZE,reader.size), reader.size);
+					stop = result === false ? true : false;
 			}
-			if (index < reader.size) {
-				reader.readUint8Array(index, Math.min(CHUNK_SIZE, reader.size - index), function(array) {
-					writer.writeUint8Array(new Uint8Array(array), function() {
-						chunkIndex++;
-						stepCopy();
-					});
-				}, onerror);
-			} else
-				writer.getData(onend);
+			reader.readUint8Array(index, Math.min(CHUNK_SIZE, reader.size - index), function(array) {
+				writer.writeUint8Array(new Uint8Array(array), function() {
+					chunkIndex++;
+					if (CHUNK_SIZE + index > reader.size) {
+						writer.getData(onend);
+						return ;
+					}
+					stepCopy();
+				});
+			}, onerror);
+
 		}
 
 		stepCopy();
