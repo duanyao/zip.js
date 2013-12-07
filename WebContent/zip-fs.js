@@ -78,13 +78,11 @@
 		var size = 0;
 
 		function process(entry) {
-			console.log(entry);
 			size += entry.uncompressedSize || 0;
 			entry.children.forEach(process);
 		}
 
 		process(entry);
-		console.log(size);
 		return size;
 	}
 
