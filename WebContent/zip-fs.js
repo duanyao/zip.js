@@ -140,8 +140,9 @@
 							exportChild();
 						}, onprogress, totalSize);
 					}, function(index) {
-						if (onprogress)
-							stop = onprogress(currentIndex + index, totalSize) === false ? true : false;
+						if (onprogress){
+							stop = onprogress(currentIndex + index, totalSize) === false;
+            }
 					}, {
 						directory: child.directory,
 						version: child.zipVersion
@@ -156,7 +157,7 @@
 		process(zipWriter, entry, onend, onprogress, totalSize);
 	}
 
-	function addFileEntry(zipEntry, fileEntry, onend, onerror) {
+	function addFileEntry(zipEntry, fileEntry, onprogress, onend, onerror) {
 		function getChildren(fileEntry, callback) {
 			if (fileEntry.isDirectory)
 				fileEntry.createReader().readEntries(callback);
@@ -164,14 +165,23 @@
 				callback([]);
 		}
 
-		function process(zipEntry, fileEntry, onend) {
+		function process(zipEntry, fileEntry, onprogress ,onend) {
 			getChildren(fileEntry, function(children) {
-				var childIndex = 0;
+				var childIndex = 0, stop = false;
 
 				function addChild(child) {
 					function nextChild(childFileEntry) {
-						process(childFileEntry, child, function() {
+						process(childFileEntry, child, onprogress, function() {
 							childIndex++;
+              var result ;
+              if(onprogress){
+                result = onprogress();
+              }
+              stop = result === false;
+              if(stop){
+                onend();
+                return ;
+              }
 							processChild();
 						});
 					}
@@ -199,7 +209,7 @@
 		}
 
 		if (fileEntry.isDirectory)
-			process(zipEntry, fileEntry, onend);
+			process(zipEntry, fileEntry,onprogress, onend);
 		else
 			fileEntry.file(function(file) {
 				zipEntry.addBlob(fileEntry.name, file);
@@ -236,7 +246,7 @@
 							if (onprogress){
 								result = onprogress(currentIndex + index, totalSize);
 							}
-							stop = result === false ? true : false;
+							stop = result === false;
 							return result;
 						}, checkCrc32);
 					}, onerror);
@@ -272,11 +282,12 @@
 
 			if (onprogress){
 					result = onprogress(Math.min(index+CHUNK_SIZE,reader.size), reader.size);
-					stop = result === false ? true : false;
+					stop = result === false;
 			}
 			if (stop) {
 				onend();
 				return;
+      }
 
 			reader.readUint8Array(index, Math.min(CHUNK_SIZE, reader.size - index), function(array) {
 				writer.writeUint8Array(new Uint8Array(array), function() {
@@ -435,8 +446,8 @@
 			Writer: Data64URIWriter
 		});
 	};
-	ZipDirectoryEntryProto.addFileEntry = function(fileEntry, onend, onerror) {
-		addFileEntry(this, fileEntry, onend, onerror);
+	ZipDirectoryEntryProto.addFileEntry = function(fileEntry, onprogress, onend, onerror) {
+		addFileEntry(this, fileEntry, onprogress, onend, onerror);
 	};
 	ZipDirectoryEntryProto.addData = function(name, params) {
 		return addChild(this, name, params);
