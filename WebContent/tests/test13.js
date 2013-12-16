@@ -32,12 +32,12 @@ function removeRecursively(entry, onend, onerror) {
 }
 
 function addFileEntryAndReadFile(fileEntry, callback) {
-	zipFs.root.addFileEntry(fileEntry,function(processed,total){
-    console.log(processed,total)
-  }, function() {
+	zipFs.root.addFileEntry(fileEntry,function() {
 		var zipEntry = zipFs.root.getChildByName("lorem.txt");
 		zipEntry.getText(callback);
-	}, onerror);
+	},function(processed,total){
+    console.log(processed,total)
+  }, onerror);
 }
 
 function logText(text) {

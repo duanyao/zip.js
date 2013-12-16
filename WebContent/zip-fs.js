@@ -157,7 +157,7 @@
 		process(zipWriter, entry, onend, onprogress, totalSize);
 	}
 
-	function addFileEntry(zipEntry, fileEntry, onprogress, onend, onerror) {
+	function addFileEntry(zipEntry, fileEntry, onend, onprogress, onerror) {
 		function getChildren(fileEntry, callback) {
 			if (fileEntry.isDirectory)
 				fileEntry.createReader().readEntries(callback);
@@ -446,8 +446,8 @@
 			Writer: Data64URIWriter
 		});
 	};
-	ZipDirectoryEntryProto.addFileEntry = function(fileEntry, onprogress, onend, onerror) {
-		addFileEntry(this, fileEntry, onprogress, onend, onerror);
+	ZipDirectoryEntryProto.addFileEntry = function(fileEntry, onend, onprogress, onerror) {
+		addFileEntry(this, fileEntry, onend, onprogress, onerror);
 	};
 	ZipDirectoryEntryProto.addData = function(name, params) {
 		return addChild(this, name, params);
