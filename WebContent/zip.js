@@ -876,6 +876,10 @@
 			}, onerror);
 		},
 		workerScriptsPath : "",
+		setWorkerScriptsPaths:function(paths){
+			INFLATE_JS = paths.inflate;
+			DEFLATE_JS = paths.deflate;
+		},
 		useWebWorkers : true
 	};
 
