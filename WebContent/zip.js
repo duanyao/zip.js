@@ -245,7 +245,11 @@
 				callback(e.target.result);
 			};
 			reader.onerror = onerror;
-			reader.readAsText(blob, encoding);
+			if (encoding) {
+				reader.readAsText(blob, encoding);
+			} else {
+				reader.readAsText(blob);
+			}
 		}
 
 		that.init = init;
