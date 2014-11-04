@@ -70,10 +70,30 @@ Note that `pako.min.js` etc. are parts of pako project, and is not provided by z
 You can find them [here](https://github.com/nodeca/pako/tree/master/dist).
 
 ## Work without web worker
-Set `zip.useWebWorkers = true` after the `<script>` tag of `zip.js` to disable web worker.
+Set `zip.useWebWorkers = false` after the `<script>` tag of `zip.js` to disable web worker.
 You need to reference `deflate.js` or `inflate.js` files after `zip.js` in the html to introduce the default
 Deflater/Inflater.
 
 You can also use zlib-asm or pako instead. For zlib-asm, reference `zlib-asm/zlib.js` and `zlib-asm/codecs.js`;
 for pako, reference `pako/pako.min.js` and `pako/codecs.js`, both after `zip.js`.
 
+## On performance
+### Worker pooling
+The [original zip.js](https://github.com/gildas-lormeau/zip.js) doesn't leak workers even if you don't call `close()`. However this is at the expense of performance: every time it deflates/inflates a single entry in a zip archive, it creates a web worker for that. So if your zip archive contains many small files, the overhead of creating/terminating workers can be very high, and the performance is bad.
+
+In contrast, this fork of zip.js only creates one web worker for a zip archive, and all of its entries are
+deflated/inflated by this worker. This strategy - "worker pooling" - greatly improves performance of zip archive with many small files.
+
+In future, we may enable multiple workers in the pool for a archive, to utilize multi-core CPUs.
+
+### Avoid copying during passing message
+The [original zip.js](https://github.com/gildas-lormeau/zip.js) copies ArrayBuffers between UI thread and workers, this is avoided in this fork.
+
+### Faster inflate/deflate
+This fork can utilize pako and zlib-asm, both are faster than the default `deflate|inflate.js`. If the browser supports asm.js (e.g. firefox), zlib-asm can deliver amazing performance, espacially when inflating files.
+
+### Push crc32 into worker
+The [original zip.js](https://github.com/gildas-lormeau/zip.js) computes crc32 in the UI thread. This fork computes crc32 in web worker, further relieving the UI thread.
+
+### Overlapping IO and computing (TODO)
+Currently IO and computing in zip.js are not overlapping, thus wastes significant amount of time. In future we should do that.
