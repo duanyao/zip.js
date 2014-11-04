@@ -844,8 +844,8 @@
 			var msg = ev.data;
 			if (msg.error) {
 				console.error('zip.js:createWorker:error message: ', msg);
+				worker.terminate(); // before onerror(), in cases onerror() throws.
 				onerror(msg.error);
-				worker.terminate();
 				return;
 			}
 			if (msg.type === 'importScripts') {
